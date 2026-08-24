@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -73,3 +74,7 @@ export default defineConfig([
 ])
 
 ```
+=======
+# orbit-slider
+A reusable, responsive, accessible and configurable React Slider/Carousel Library.
+>>>>>>> 4d217c2fcfdcaf95f0c28caa11affb4406105400
