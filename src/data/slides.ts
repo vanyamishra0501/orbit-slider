@@ -1,48 +1,40 @@
-import type { SliderSlide } from "../components/Slider";
+import type { SliderSlide } from "./components/Slider/Slider.types";
 
 export const slides: SliderSlide[] = [
   {
     id: 1,
-    image:
-      "https://picsum.photos/id/1015/800/500",
-    title: "Mountain",
-    subtitle: "Beautiful landscape",
-    description:
-      "Explore amazing mountain views.",
+    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+    title: "Beautiful Mountains",
+    subtitle: "Explore Nature",
+    description: "Discover beautiful landscapes and peaceful mountain views.",
     buttonText: "Explore",
-    buttonLink: "#"
+    buttonLink: "#",
   },
   {
     id: 2,
-    image:
-      "https://picsum.photos/id/1016/800/500",
-    title: "Forest",
-    subtitle: "Nature experience",
-    description:
-      "Discover peaceful forests.",
+    image: "https://images.unsplash.com/photo-1500534623283-312aade485b7",
+    title: "Amazing Landscape",
+    subtitle: "Travel the World",
+    description: "Experience breathtaking views and unforgettable destinations.",
     buttonText: "Discover",
-    buttonLink: "#"
+    buttonLink: "#",
   },
   {
     id: 3,
-    image:
-      "https://picsum.photos/id/1018/800/500",
-    title: "Lake",
-    subtitle: "Relaxing destination",
-    description:
-      "Enjoy a beautiful lake view.",
-    buttonText: "View",
-    buttonLink: "#"
+    image: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
+    title: "Peaceful Nature",
+    subtitle: "Find Your Escape",
+    description: "Relax and enjoy the beauty of nature around you.",
+    buttonText: "Learn More",
+    buttonLink: "#",
   },
   {
     id: 4,
-    image:
-      "https://picsum.photos/id/1020/800/500",
-    title: "Adventure",
-    subtitle: "Start exploring",
-    description:
-      "Experience something new.",
-    buttonText: "Start",
-    buttonLink: "#"
-  }
+    image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+    title: "Adventure Awaits",
+    subtitle: "Start Exploring",
+    description: "There is always something new waiting to be discovered.",
+    buttonText: "Start Now",
+    buttonLink: "#",
+  },
 ];

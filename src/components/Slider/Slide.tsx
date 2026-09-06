@@ -3,56 +3,30 @@ import type { SliderSlide } from "./Slider.types";
 interface SlideProps {
   slide: SliderSlide;
   index: number;
-  renderSlide?: (
-    slide: SliderSlide,
-    index: number
-  ) => React.ReactNode;
 }
 
-export function Slide({
-  slide,
-  index,
-  renderSlide
-}: SlideProps) {
-  if (renderSlide) {
-    return (
-      <div className="orbit-slider__slide">
-        {renderSlide(slide, index)}
-      </div>
-    );
-  }
-
+export function Slide({ slide, index }: SlideProps) {
   return (
-    <div className="orbit-slider__slide">
+    <div className="orbit-slide">
       {slide.image && (
         <img
+          className="orbit-slide-image"
           src={slide.image}
           alt={slide.title || `Slide ${index + 1}`}
-          loading={index === 0 ? "eager" : "lazy"}
         />
       )}
 
       {slide.title && (
-        <h2>{slide.title}</h2>
-      )}
-
-      {slide.subtitle && (
-        <h3>{slide.subtitle}</h3>
+        <h2 className="orbit-slide-title">
+          {slide.title}
+        </h2>
       )}
 
       {slide.description && (
-        <p>{slide.description}</p>
+        <p className="orbit-slide-description">
+          {slide.description}
+        </p>
       )}
-
-      {slide.buttonText &&
-        slide.buttonLink && (
-          <a
-            href={slide.buttonLink}
-            className="orbit-slider__button"
-          >
-            {slide.buttonText}
-          </a>
-        )}
     </div>
   );
 }

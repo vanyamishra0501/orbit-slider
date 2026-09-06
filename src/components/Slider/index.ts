@@ -7,5 +7,5 @@ export type {
   AutoplayOptions,
   NavigationOptions,
   PaginationOptions,
-  ResponsiveValue
+  ResponsiveValue,
 } from "./Slider.types";
