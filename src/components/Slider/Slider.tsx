@@ -6,10 +6,14 @@ import {
   useState,
 } from "react";
 
+import type React from "react";
+
 import type {
   SliderProps,
   SliderRef,
 } from "./Slider.types";
+
+import { useSwipe } from "../../hooks/useSwipe";
 
 import "./Slider.css";
 
@@ -21,14 +25,20 @@ export const Slider = forwardRef<SliderRef, SliderProps>(
       autoplay = {},
       navigation = {},
       pagination = {},
-      transitionDuration = 400,
-      transitionEasing = "ease",
-      height = "300px",
-      width = "500px",
+      transitionDuration = 600,
+      transitionEasing = "cubic-bezier(.2,.8,.2,1)",
+      height = "500px",
+      width = "900px",
+
+      effect = "slide",
+      effectOptions = {},
+
+      className = "",
     },
     ref
   ) => {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
 
     const {
       enabled: autoplayEnabled = false,
@@ -51,6 +61,20 @@ export const Slider = forwardRef<SliderRef, SliderProps>(
 
     const hasSlides = slides.length > 0;
 
+    /*
+     * Orbit settings
+     */
+    const {
+      radius = 280,
+      depth = 180,
+      perspective = 1200,
+      rotate = 30,
+      scale = 0.72,
+    } = effectOptions;
+
+    /*
+     * Next slide
+     */
     const nextSlide = useCallback(() => {
       setCurrentIndex((current) => {
         if (!hasSlides) {
@@ -65,6 +89,9 @@ export const Slider = forwardRef<SliderRef, SliderProps>(
       });
     }, [hasSlides, loop, slides.length]);
 
+    /*
+     * Previous slide
+     */
     const previousSlide = useCallback(() => {
       setCurrentIndex((current) => {
         if (!hasSlides) {
@@ -79,6 +106,9 @@ export const Slider = forwardRef<SliderRef, SliderProps>(
       });
     }, [hasSlides, loop, slides.length]);
 
+    /*
+     * Go to specific slide
+     */
     const goToSlide = useCallback(
       (index: number) => {
         if (!hasSlides) {
@@ -91,10 +121,42 @@ export const Slider = forwardRef<SliderRef, SliderProps>(
         );
 
         setCurrentIndex(safeIndex);
+
+        if (pauseOnInteraction) {
+          setIsPaused(true);
+        }
       },
-      [hasSlides, slides.length]
+      [
+        hasSlides,
+        slides.length,
+        pauseOnInteraction,
+      ]
     );
 
+    /*
+     * Swipe
+     */
+    const swipeHandlers = useSwipe({
+      onSwipeLeft: () => {
+        nextSlide();
+
+        if (pauseOnInteraction) {
+          setIsPaused(true);
+        }
+      },
+
+      onSwipeRight: () => {
+        previousSlide();
+
+        if (pauseOnInteraction) {
+          setIsPaused(true);
+        }
+      },
+    });
+
+    /*
+     * Public API
+     */
     useImperativeHandle(
       ref,
       () => ({
@@ -102,11 +164,42 @@ export const Slider = forwardRef<SliderRef, SliderProps>(
         prev: previousSlide,
         goTo: goToSlide,
       }),
-      [nextSlide, previousSlide, goToSlide]
+      [
+        nextSlide,
+        previousSlide,
+        goToSlide,
+      ]
     );
+    /*
+ * Keyboard controls
+ */
+useEffect(() => {
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "ArrowRight") {
+      nextSlide();
+    }
 
+    if (event.key === "ArrowLeft") {
+      previousSlide();
+    }
+  };
+
+  window.addEventListener("keydown", handleKeyDown);
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown);
+  };
+}, [nextSlide, previousSlide]);
+
+    /*
+     * Autoplay
+     */
     useEffect(() => {
-      if (!autoplayEnabled || slides.length <= 1) {
+      if (
+        !autoplayEnabled ||
+        isPaused ||
+        slides.length <= 1
+      ) {
         return;
       }
 
@@ -120,16 +213,29 @@ export const Slider = forwardRef<SliderRef, SliderProps>(
     }, [
       autoplayEnabled,
       delay,
+      isPaused,
       nextSlide,
       slides.length,
     ]);
 
+    /*
+     * Keep index valid
+     */
     useEffect(() => {
-      if (currentIndex >= slides.length && slides.length > 0) {
+      if (
+        currentIndex >= slides.length &&
+        slides.length > 0
+      ) {
         setCurrentIndex(slides.length - 1);
       }
-    }, [currentIndex, slides.length]);
+    }, [
+      currentIndex,
+      slides.length,
+    ]);
 
+    /*
+     * No slides
+     */
     if (!hasSlides) {
       return (
         <div className="slider slider--empty">
@@ -138,159 +244,484 @@ export const Slider = forwardRef<SliderRef, SliderProps>(
       );
     }
 
-    const currentSlide = slides[currentIndex];
+    /*
+     * Calculate position relative
+     * to active slide.
+     */
+    const getSlideOffset = (index: number) => {
+      let offset = index - currentIndex;
+
+      if (loop && slides.length > 2) {
+        const total = slides.length;
+
+        if (offset > total / 2) {
+          offset -= total;
+        }
+
+        if (offset < -total / 2) {
+          offset += total;
+        }
+      }
+
+      return offset;
+    };
+
+    /*
+     * Effect styles
+     */
+    const getEffectStyle = (
+      offset: number
+    ): React.CSSProperties => {
+      /*
+       * Normal slide
+       */
+      if (effect === "slide") {
+        return {
+          transform: `translateX(${offset * 100}%)`,
+          transition: `
+            transform ${transitionDuration}ms ${transitionEasing}
+          `,
+        };
+      }
+
+      /*
+       * Fade
+       */
+      if (effect === "fade") {
+        return {
+          transform: "translateX(-50%)",
+          opacity: offset === 0 ? 1 : 0,
+          pointerEvents:
+            offset === 0 ? "auto" : "none",
+          transition: `
+            opacity ${transitionDuration}ms ${transitionEasing}
+          `,
+        };
+      }
+
+      /*
+       * Zoom
+       */
+      if (effect === "zoom") {
+        return {
+          transform:
+            offset === 0
+              ? "translateX(-50%) scale(1)"
+              : "translateX(-50%) scale(0.85)",
+
+          opacity: offset === 0 ? 1 : 0,
+
+          pointerEvents:
+            offset === 0 ? "auto" : "none",
+
+          transition: `
+            transform ${transitionDuration}ms ${transitionEasing},
+            opacity ${transitionDuration}ms ${transitionEasing}
+          `,
+        };
+      }
+
+      /*
+       * Coverflow
+       */
+      if (effect === "coverflow") {
+        const rotation = offset * rotate;
+        const z =
+          -Math.abs(offset) * depth;
+
+        const currentScale =
+          offset === 0 ? 1 : scale;
+
+        return {
+          position: "absolute",
+
+          left: "50%",
+          top: "50%",
+
+          width: "68%",
+          height: "88%",
+
+          transform: `
+            translate(-50%, -50%)
+            translateX(${offset * 48}%)
+            translateZ(${z}px)
+            rotateY(${rotation}deg)
+            scale(${currentScale})
+          `,
+
+          opacity:
+            offset === 0
+              ? 1
+              : Math.max(
+                  0.35,
+                  1 -
+                    Math.abs(offset) * 0.2
+                ),
+
+          zIndex:
+            100 - Math.abs(offset),
+
+          pointerEvents:
+            offset === 0
+              ? "auto"
+              : "none",
+
+          transition: `
+            transform ${transitionDuration}ms ${transitionEasing},
+            opacity ${transitionDuration}ms ${transitionEasing}
+          `,
+
+          transformStyle:
+            "preserve-3d",
+        };
+      }
+
+      /*
+       * Cube
+       */
+      if (effect === "cube") {
+        const rotation = offset * -90;
+
+        return {
+          position: "absolute",
+
+          left: "50%",
+          top: "50%",
+
+          width: "100%",
+          height: "100%",
+
+          transform: `
+            translate(-50%, -50%)
+            rotateY(${rotation}deg)
+            translateZ(${radius / 2}px)
+          `,
+
+          opacity:
+            Math.abs(offset) <= 1 ? 1 : 0,
+
+          zIndex:
+            100 - Math.abs(offset),
+
+          transition: `
+            transform ${transitionDuration}ms ${transitionEasing},
+            opacity ${transitionDuration}ms ${transitionEasing}
+          `,
+
+          transformStyle:
+            "preserve-3d",
+        };
+      }
+
+      /*
+       * =========================
+       * ORBIT EFFECT
+       * =========================
+       */
+      if (effect === "orbit") {
+        const angle = offset * 38;
+
+        const radians =
+          (angle * Math.PI) / 180;
+
+        /*
+         * Horizontal orbit position
+         */
+        const x =
+          Math.sin(radians) * radius;
+
+        /*
+         * Depth position
+         */
+        const z =
+          Math.cos(radians) * depth -
+          depth;
+
+        /*
+         * Center = 1
+         * Side slides become smaller
+         */
+        const normalizedDepth =
+          (z + depth) /
+          (depth * 2);
+
+        const orbitScale =
+          offset === 0
+            ? 1
+            : 0.62 +
+              normalizedDepth * 0.18;
+
+        /*
+         * Side slide opacity
+         */
+        const opacity =
+          offset === 0
+            ? 1
+            : Math.max(
+                0.35,
+                0.7 -
+                  Math.abs(offset) * 0.08
+              );
+
+        /*
+         * Rotate side slides toward center
+         */
+        const rotation =
+          -Math.sin(radians) * rotate;
+
+        return {
+          position: "absolute",
+
+          left: "50%",
+          top: "50%",
+
+          /*
+           * IMPORTANT:
+           * Slides are smaller than
+           * the complete slider.
+           */
+          width: "68%",
+          height: "88%",
+
+          transform: `
+            translate(-50%, -50%)
+            translate3d(${x}px, 0, ${z}px)
+            rotateY(${rotation}deg)
+            scale(${orbitScale})
+          `,
+
+          opacity,
+
+          zIndex:
+            offset === 0
+              ? 1000
+              : Math.max(
+                  1,
+                  500 -
+                    Math.abs(offset) * 50
+                ),
+
+          pointerEvents:
+            offset === 0
+              ? "auto"
+              : "none",
+
+          transition: `
+            transform ${transitionDuration}ms ${transitionEasing},
+            opacity ${transitionDuration}ms ${transitionEasing}
+          `,
+
+          transformStyle:
+            "preserve-3d",
+        };
+      }
+
+      return {};
+    };
 
     return (
       <section
-        className="slider"
+        className={`slider ${
+          effect === "orbit"
+            ? "slider--orbit"
+            : ""
+        } ${className}`}
         style={{
           width,
+          perspective:
+            effect === "orbit"
+              ? `${perspective}px`
+              : undefined,
         }}
         aria-roledescription="carousel"
         aria-label="Image slider"
-        onMouseEnter={
-          pauseOnHover ? undefined : undefined
-        }
+
+        onMouseEnter={() => {
+          if (pauseOnHover) {
+            setIsPaused(true);
+          }
+        }}
+
+        onMouseLeave={() => {
+          if (pauseOnHover) {
+            setIsPaused(false);
+          }
+        }}
       >
         <div
           className="slider__main"
           style={{
             height,
           }}
+          {...swipeHandlers}
         >
-          <img
-            key={currentSlide.id}
-            className="slider__image"
-            src={currentSlide.image}
-            alt={
-              currentSlide.title ??
-              `Slide ${currentIndex + 1}`
-            }
-            style={{
-              transitionDuration: `${transitionDuration}ms`,
-              transitionTimingFunction: transitionEasing,
-            }}
-          />
+          <div className="slider__stage">
+            {slides.map(
+              (slide, index) => {
+                const offset =
+                  getSlideOffset(index);
 
-          {currentSlide.title && (
-            <div className="slider__overlay">
-              <h2>{currentSlide.title}</h2>
+                return (
+                  <div
+                    key={
+                      slide.id ?? index
+                    }
+                    className={`slider__slide ${
+                      offset === 0
+                        ? "is-active"
+                        : ""
+                    }`}
+                    style={getEffectStyle(
+                      offset
+                    )}
+                    aria-hidden={
+                      offset !== 0
+                    }
+                  >
+                    {slide.image && (
+                      <img
+                        className="slider__image"
+                        src={slide.image}
+                        alt={
+                          slide.title ||
+                          "Slider image"
+                        }
+                        draggable={false}
+                      />
+                    )}
 
-              {currentSlide.description && (
-                <p>{currentSlide.description}</p>
-              )}
+                    {(slide.title ||
+                      slide.subtitle ||
+                      slide.description) && (
+                      <div className="slider__caption">
+                        {slide.title && (
+                          <h2>
+                            {slide.title}
+                          </h2>
+                        )}
 
-              {currentSlide.buttonText && (
+                        {slide.subtitle && (
+                          <h3>
+                            {slide.subtitle}
+                          </h3>
+                        )}
+
+                        {slide.description && (
+                          <p>
+                            {slide.description}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+            )}
+
+            {navigationEnabled && (
+              <>
                 <button
                   type="button"
-                  className="slider__button"
+                  className="slider__button slider__button--prev"
                   onClick={() => {
-                    if (currentSlide.buttonLink) {
-                      window.open(
-                        currentSlide.buttonLink,
-                        "_blank",
-                        "noopener,noreferrer"
-                      );
+                    previousSlide();
+
+                    if (
+                      pauseOnInteraction
+                    ) {
+                      setIsPaused(true);
                     }
                   }}
+                  aria-label={prevLabel}
                 >
-                  {currentSlide.buttonText}
+                  ❮
                 </button>
-              )}
-            </div>
-          )}
 
-          {navigationEnabled && (
-            <>
-              <button
-                type="button"
-                className="slider__arrow slider__arrow--left"
-                onClick={previousSlide}
-                disabled={
-                  !loop && currentIndex === 0
-                }
-                aria-label={prevLabel}
-              >
-                ❮
-              </button>
+                <button
+                  type="button"
+                  className="slider__button slider__button--next"
+                  onClick={() => {
+                    nextSlide();
 
-              <button
-                type="button"
-                className="slider__arrow slider__arrow--right"
-                onClick={nextSlide}
-                disabled={
-                  !loop &&
-                  currentIndex === slides.length - 1
-                }
-                aria-label={nextLabel}
-              >
-                ❯
-              </button>
-            </>
-          )}
+                    if (
+                      pauseOnInteraction
+                    ) {
+                      setIsPaused(true);
+                    }
+                  }}
+                  aria-label={nextLabel}
+                >
+                  ❯
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {paginationEnabled && (
           <div
-            className="slider__pagination"
-            aria-label="Slide navigation"
+            className={`slider__pagination slider__pagination--${paginationType}`}
           >
-            {slides.map((slide, index) => (
-              <button
-                key={slide.id}
-                type="button"
-                className={`slider__pagination-button ${
-                  index === currentIndex
-                    ? "slider__pagination-button--active"
-                    : ""
-                }`}
-                onClick={() => {
-                  if (clickable) {
-                    goToSlide(index);
+            {slides.map(
+              (slide, index) => (
+                <button
+                  key={
+                    slide.id ?? index
                   }
-                }}
-                disabled={!clickable}
-                aria-label={`Go to slide ${index + 1}`}
-                aria-current={
-                  index === currentIndex
-                    ? "true"
-                    : undefined
-                }
-              >
-                {paginationType === "numbers"
-                  ? index + 1
-                  : ""}
-              </button>
-            ))}
+                  type="button"
+                  className={
+                    index === currentIndex
+                      ? "active"
+                      : ""
+                  }
+                  disabled={!clickable}
+                  onClick={() =>
+                    goToSlide(index)
+                  }
+                  aria-label={`Go to slide ${
+                    index + 1
+                  }`}
+                  aria-current={
+                    index === currentIndex
+                      ? "true"
+                      : undefined
+                  }
+                >
+                  {paginationType ===
+                  "numbers"
+                    ? index + 1
+                    : ""}
+                </button>
+              )
+            )}
           </div>
         )}
 
-        <div className="slider__thumbnails">
-          {slides.map((slide, index) => (
-            <button
-              key={slide.id}
-              type="button"
-              className={`slider__thumbnail ${
-                index === currentIndex
-                  ? "slider__thumbnail--active"
-                  : ""
-              }`}
-              onClick={() => goToSlide(index)}
-              aria-label={`Go to slide ${index + 1}`}
-            >
-              <img
-                src={slide.image}
-                alt=""
-              />
-            </button>
-          ))}
-        </div>
+        {autoplayEnabled && (
+  <div className="slider__controls">
+    <button
+      type="button"
+      className="slider__play-button"
+      onClick={() => {
+        setIsPaused((paused) => !paused);
+      }}
+      aria-label={
+        isPaused
+          ? "Play autoplay"
+          : "Pause autoplay"
+      }
+    >
+      {isPaused ? "▶ Play" : "⏸ Pause"}
+    </button>
 
-        {autoplayEnabled && pauseOnInteraction && (
-          <p className="slider__status">
-            Auto-playing
-          </p>
-        )}
+    <span className="slider__status">
+      {isPaused
+        ? "Autoplay paused"
+        : "Autoplay playing"}
+    </span>
+  </div>
+)}
+      
       </section>
     );
   }

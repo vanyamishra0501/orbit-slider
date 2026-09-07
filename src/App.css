@@ -1,23 +1,314 @@
+/* =========================================
+   ORBIT SLIDER - PREMIUM BACKGROUND
+   ========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  color: white;
+
+  background:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(70, 80, 180, 0.35),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(0, 180, 255, 0.25),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 50% 90%,
+      rgba(130, 40, 200, 0.28),
+      transparent 35%
+    ),
+    linear-gradient(
+      135deg,
+      #050816 0%,
+      #0b1026 45%,
+      #120b24 100%
+    );
+
+  background-attachment: fixed;
+}
+
+/* Main application */
 .app {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 20px;
+  position: relative;
+
+  min-height: 100vh;
+
+  overflow: hidden;
+
+  padding: 55px 20px 80px;
 }
 
-.app h1 {
+/* =========================================
+   GLOWING BACKGROUND ORBS
+   ========================================= */
+
+.app::before,
+.app::after {
+  content: "";
+
+  position: fixed;
+
+  width: 420px;
+  height: 420px;
+
+  border-radius: 50%;
+
+  filter: blur(90px);
+
+  opacity: 0.28;
+
+  pointer-events: none;
+
+  z-index: 0;
+}
+
+.app::before {
+  top: -150px;
+  left: -100px;
+
+  background: #3b82f6;
+
+  animation: floatGlow 9s ease-in-out infinite;
+}
+
+.app::after {
+  right: -120px;
+  bottom: -150px;
+
+  background: #a855f7;
+
+  animation: floatGlow 11s ease-in-out infinite reverse;
+}
+
+@keyframes floatGlow {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(50px, 30px) scale(1.15);
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* =========================================
+   HEADER
+   ========================================= */
+
+.app-header {
+  position: relative;
+
+  z-index: 5;
+
   text-align: center;
-  margin-bottom: 30px;
+
+  margin-bottom: 45px;
 }
 
-.controls {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 30px;
+.app-header h1 {
+  margin: 0;
+
+  font-size: clamp(38px, 6vw, 64px);
+
+  font-weight: 800;
+
+  letter-spacing: -2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #ffffff,
+      #8ed8ff,
+      #c69cff,
+      #ffffff
+    );
+
+  background-size: 250% auto;
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+
+  animation: titleGradient 6s linear infinite;
+
+  text-shadow:
+    0 0 30px rgba(120, 180, 255, 0.2);
 }
 
-.controls button {
-  padding: 10px 16px;
-  cursor: pointer;
+@keyframes titleGradient {
+  0% {
+    background-position: 0% center;
+  }
+
+  100% {
+    background-position: 250% center;
+  }
+}
+
+.app-header p {
+  margin-top: 12px;
+
+  color: rgba(220, 230, 255, 0.72);
+
+  font-size: 17px;
+
+  letter-spacing: 0.5px;
+}
+
+/* =========================================
+   SLIDER SECTION
+   ========================================= */
+
+.slider-section {
+  position: relative;
+
+  z-index: 5;
+
+  width: min(100%, 1100px);
+
+  margin: 0 auto;
+
+  padding: 35px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius: 28px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.025)
+    );
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Glow behind slider */
+.slider-section::before {
+  content: "";
+
+  position: absolute;
+
+  inset: -80px;
+
+  z-index: -1;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(70, 130, 255, 0.16),
+      transparent 65%
+    );
+
+  filter: blur(30px);
+
+  pointer-events: none;
+}
+
+/* =========================================
+   SMALL DECORATIVE LIGHTS
+   ========================================= */
+
+.slider-section::after {
+  content: "";
+
+  position: absolute;
+
+  width: 8px;
+  height: 8px;
+
+  top: 30px;
+  right: 35px;
+
+  border-radius: 50%;
+
+  background: white;
+
+  box-shadow:
+    0 0 8px white,
+    0 0 20px #5ecbff,
+    0 0 40px #5ecbff;
+
+  opacity: 0.8;
+
+  animation: pulseLight 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseLight {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+
+@media (max-width: 768px) {
+  .app {
+    padding: 35px 12px 60px;
+  }
+
+  .app-header {
+    margin-bottom: 30px;
+  }
+
+  .app-header h1 {
+    letter-spacing: -1px;
+  }
+
+  .app-header p {
+    font-size: 14px;
+  }
+
+  .slider-section {
+    padding: 15px;
+
+    border-radius: 20px;
+  }
 }

@@ -1,4 +1,4 @@
-import type { SliderSlide } from "./components/Slider/Slider.types";
+import type { SliderSlide } from "../components/Slider/Slider.types";
 
 export const slides: SliderSlide[] = [
   {

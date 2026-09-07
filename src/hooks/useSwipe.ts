@@ -1,53 +1,58 @@
-import { useRef } from "react";
+import { useRef, type TouchEvent } from "react";
 
-interface SwipeOptions {
-  onNext: () => void;
-  onPrevious: () => void;
-  threshold?: number;
+interface SwipeHandlers {
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
 }
 
 export function useSwipe({
-  onNext,
-  onPrevious,
-  threshold = 50
-}: SwipeOptions) {
-  const startX = useRef<number | null>(
-    null
-  );
+  onSwipeLeft,
+  onSwipeRight,
+}: SwipeHandlers) {
+  const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
 
-  const handleTouchStart = (
-    event: React.TouchEvent
-  ) => {
-    startX.current =
-      event.touches[0].clientX;
+  const onTouchStart = (event: TouchEvent) => {
+    startX.current = event.touches[0].clientX;
+    startY.current = event.touches[0].clientY;
   };
 
-  const handleTouchEnd = (
-    event: React.TouchEvent
-  ) => {
-    if (startX.current === null) {
+  const onTouchEnd = (event: TouchEvent) => {
+    if (
+      startX.current === null ||
+      startY.current === null
+    ) {
       return;
     }
 
-    const endX =
-      event.changedTouches[0].clientX;
+    const endX = event.changedTouches[0].clientX;
+    const endY = event.changedTouches[0].clientY;
 
-    const difference =
-      startX.current - endX;
+    const differenceX = endX - startX.current;
+    const differenceY = endY - startY.current;
 
-    if (Math.abs(difference) >= threshold) {
-      if (difference > 0) {
-        onNext();
+    const minimumSwipeDistance = 50;
+
+    const isHorizontalSwipe =
+      Math.abs(differenceX) > Math.abs(differenceY);
+
+    if (
+      isHorizontalSwipe &&
+      Math.abs(differenceX) > minimumSwipeDistance
+    ) {
+      if (differenceX < 0) {
+        onSwipeLeft?.();
       } else {
-        onPrevious();
+        onSwipeRight?.();
       }
     }
 
     startX.current = null;
+    startY.current = null;
   };
 
   return {
-    handleTouchStart,
-    handleTouchEnd
+    onTouchStart,
+    onTouchEnd,
   };
 }
