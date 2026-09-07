@@ -1,53 +1,29 @@
 # Orbit Slider
 
-A reusable, responsive, accessible, and configurable React Slider/Carousel Library built with React, TypeScript, and Vite.
+A modern, responsive, accessible React + TypeScript slider/carousel.
 
 ## Features
 
-* Responsive slider/carousel
-* TypeScript support
-* Previous and Next navigation
-* Pagination
-* Autoplay
-* Loop support
-* Touch/swipe support
-* Accessible controls
-* Custom transitions
-* Responsive behavior
+- Responsive slides
+- Touch/swipe gestures
+- Keyboard navigation
+- Mouse navigation
+- Infinite loop
+- Autoplay
+- Pause on hover
+- Progress indicator
+- Pagination
+- Custom transitions
+- Vertical/horizontal orientation
+- Multiple slides per view
+- Custom slide rendering
+- TypeScript support
+- Accessibility support
 
 ## Installation
 
-```bash
-npm install
-```
+npm install orbit-slider
 
-## Run the project
+## Basic Usage
 
-```bash
-npm run dev
-```
-
-Then open the local URL shown in your terminal.
-
-## Build for production
-
-```bash
-npm run build
-```
-
-## Preview production build
-
-```bash
-npm run preview
-```
-
-## Technologies
-
-* React
-* TypeScript
-* Vite
-* CSS
-
-## License
-
-MIT
+...
